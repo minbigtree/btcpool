@@ -180,6 +180,28 @@ int main(int argc, char **argv) {
   }
 
   try {
+    // chain type
+    string chainType = cfg.lookup("sharelog.chain_type");
+
+     //////////////////////////////////////////////////////////////////////////////
+    //  dump shares to stdout
+    //////////////////////////////////////////////////////////////////////////////
+    if (optDate != 0 && optPUID != -1) {
+      const string tsStr = Strings::Format("%04d-%02d-%02d 00:00:00",
+                                          optDate/10000,
+                                          optDate/100 % 100, optDate % 100);
+      const time_t ts = str2time(tsStr.c_str(), "%F %T");
+      std::set<int32_t> uids;
+      if (optPUID > 0)
+      uids.insert(optPUID);
+
+      std::shared_ptr<ShareLogDumper> sldumper = newShareLogDumper(chainType, cfg.lookup("sharelog.data_dir"), ts, uids);
+      sldumper->dump2stdout();
+
+      google::ShutdownGoogleLogging();
+      return 0;
+    }
+ 
     // check if we are using testnet3
     bool isTestnet3 = false;
     cfg.lookupValue("testnet", isTestnet3);
@@ -201,30 +223,9 @@ int main(int argc, char **argv) {
                                         cfg.lookup("pooldb.dbname"));
     }
 
-    // chain type
-    string chainType = cfg.lookup("sharelog.chain_type");
     // Track duplicate shares within N blocks.
     int32_t dupShareTrackingHeight = 3;
     cfg.lookupValue("dup_share_checker.tracking_height_number", dupShareTrackingHeight);
-
-    //////////////////////////////////////////////////////////////////////////////
-    //  dump shares to stdout
-    //////////////////////////////////////////////////////////////////////////////
-    if (optDate != 0 && optPUID != -1) {
-      const string tsStr = Strings::Format("%04d-%02d-%02d 00:00:00",
-                                          optDate/10000,
-                                          optDate/100 % 100, optDate % 100);
-      const time_t ts = str2time(tsStr.c_str(), "%F %T");
-      std::set<int32_t> uids;
-      if (optPUID > 0)
-      uids.insert(optPUID);
-
-      std::shared_ptr<ShareLogDumper> sldumper = newShareLogDumper(chainType, cfg.lookup("sharelog.data_dir"), ts, uids);
-      sldumper->dump2stdout();
-
-      google::ShutdownGoogleLogging();
-      return 0;
-    }
 
     //////////////////////////////////////////////////////////////////////////////
     //  re-run someday's share bin log

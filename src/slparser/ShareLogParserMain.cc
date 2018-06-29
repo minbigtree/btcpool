@@ -180,6 +180,16 @@ int main(int argc, char **argv) {
   }
 
   try {
+    // check if we are using testnet3
+    bool isTestnet3 = false;
+    cfg.lookupValue("testnet", isTestnet3);
+    if (isTestnet3) {
+      SelectParams(CBaseChainParams::TESTNET);
+      LOG(WARNING) << "using bitcoin testnet3";
+    } else {
+      SelectParams(CBaseChainParams::MAIN);
+    }
+
     // chain type
     string chainType = cfg.lookup("sharelog.chain_type");
 
@@ -193,7 +203,7 @@ int main(int argc, char **argv) {
       const time_t ts = str2time(tsStr.c_str(), "%F %T");
       std::set<int32_t> uids;
       if (optPUID > 0)
-      uids.insert(optPUID);
+        uids.insert(optPUID);
 
       std::shared_ptr<ShareLogDumper> sldumper = newShareLogDumper(chainType, cfg.lookup("sharelog.data_dir"), ts, uids);
       sldumper->dump2stdout();
@@ -202,16 +212,6 @@ int main(int argc, char **argv) {
       return 0;
     }
  
-    // check if we are using testnet3
-    bool isTestnet3 = false;
-    cfg.lookupValue("testnet", isTestnet3);
-    if (isTestnet3) {
-      SelectParams(CBaseChainParams::TESTNET);
-      LOG(WARNING) << "using bitcoin testnet3";
-    } else {
-      SelectParams(CBaseChainParams::MAIN);
-    }
-
     // DB info
     MysqlConnectInfo *poolDBInfo = nullptr;
     {
